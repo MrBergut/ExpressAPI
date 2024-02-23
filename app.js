@@ -72,7 +72,7 @@ app.put('/api/users', function(req, res){
     }
 });
 
-const PORT = 3000
+const PORT = 3005
 
 app.listen(PORT, function(){
     console.log(`http://localhost:${PORT}`)

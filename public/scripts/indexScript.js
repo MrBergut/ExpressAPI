@@ -13,6 +13,7 @@ async function GetUsers() {
     }
 }
 
+// получение одного пользователя
 async function GetUser(id) {
     const response = await fetch('/api/users/' + id, {
         method: 'GET',
@@ -26,10 +27,12 @@ async function GetUser(id) {
         form.elements['age'].value = user.age;
     }
 }
+
+//добавление пользователя
 async function CreateUser(userName, userAge) {
     const response = await fetch('api/users', {
         method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': "application/json" },
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify({
             name: userName,
             age: parseInt(userAge, 10)
@@ -41,10 +44,12 @@ async function CreateUser(userName, userAge) {
         tbody.append(row(user));
     }
 }
+
+//изменение пользователя
 async function EditUser(userId, userName, userAge) {
     const response = await fetch('api/users', {
         method: 'PUT',
-        headers: { 'Accept': 'application/json', "Content-Type": "application/json" },
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify({
             id: userId,
             name: userName,
@@ -58,13 +63,29 @@ async function EditUser(userId, userName, userAge) {
     }
 }
 
+//удаление пользователя
+async function DeleteUser(id) {
+    const response = await fetch('api/users/' + id, {
+        method: 'DELETE',
+        headers: { 'Accept': 'aplication/json' }
+    });
+    if (response.ok === true) {
+        const user = await response.json();
+        document.querySelector(`tr[data-rowid="${user.id}"]`).remove();
+    }
+}
+
+//сброс формы
 function reset() {
     const form = document.forms['userForm'];
     console.log(form);
     form.reset();
     form.elements['id'].value = 0;
 }
+
+//строка для таблицы
 function row(user) {
+    
     const tr = document.createElement('tr');
     tr.setAttribute('data-rowid', user.id);
 
@@ -74,7 +95,7 @@ function row(user) {
 
     const nameTd = document.createElement('td');
     nameTd.append(user.name);
-    tr.append(idTd);
+    tr.append(nameTd);
 
     const ageTd = document.createElement('td');
     ageTd.append(user.age);
@@ -85,23 +106,35 @@ function row(user) {
     const editLink = document.createElement('a');
     editLink.setAttribute('data-id', user.id);
     editLink.setAttribute('class', 'btn');
+    editLink.append('Изменить');
+    editLink.addEventListener('click', e => {
+        e.preventDefault();
+        GetUser(user.id);
+    });
+    linksTd.append(editLink);
+        
+    const removeLink = document.createElement('a');
+    removeLink.setAttribute('data-id', user.id);
+    removeLink.setAttribute('class', 'btn');
     removeLink.append('Удалить');
     removeLink.addEventListener('click', e => {
         e.preventDefault();
         DeleteUser(user.id);
     });
-
+        
     linksTd.append(removeLink);
     tr.appendChild(linksTd);
 
     return tr;
 }
 
+// сброс значений формы
 document.getElementById('resetBtn').addEventListener('click', e => {
     e.preventDefault();
     reset();
 })
 
+// отправка
 document.forms['userForm'].addEventListener('submit', e => {
     e.preventDefault();
     const form = document.forms['userForm'];
@@ -114,4 +147,5 @@ document.forms['userForm'].addEventListener('submit', e => {
         EditUser(id, name, age);
 });
 
+// загрузка пользователей
 GetUsers();
