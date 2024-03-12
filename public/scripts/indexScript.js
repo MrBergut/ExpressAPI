@@ -1,7 +1,7 @@
 const tbody = document.querySelector('tbody');
 
 async function GetUsers() {
-    const response = await fetch('/users', {
+    const response = await fetch('/api/users', {
         method: 'GET',
         headers: { 'accept': 'application/json' }
     });
@@ -15,7 +15,7 @@ async function GetUsers() {
 
 // получение одного пользователя
 async function GetUser(id) {
-    const response = await fetch('/users/' + id, {
+    const response = await fetch('/api/users/' + id, {
         method: 'GET',
         headers: { 'Accept': 'application/json' }
     });
@@ -30,7 +30,7 @@ async function GetUser(id) {
 
 //добавление пользователя
 async function CreateUser(userName, userAge) {
-    const response = await fetch('/users', {
+    const response = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -42,13 +42,12 @@ async function CreateUser(userName, userAge) {
         const user = await response.json();
         reset();
         tbody.append(row(user));
-       
     }
 }
 
 //изменение пользователя
 async function EditUser(userId, userName, userAge) {
-    const response = await fetch('/users', {
+    const response = await fetch('/api/users', {
         method: 'PUT',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -66,9 +65,9 @@ async function EditUser(userId, userName, userAge) {
 
 //удаление пользователя
 async function DeleteUser(id) {
-    const response = await fetch('/users/' + id, {
+    const response = await fetch('/api/users/' + id, {
         method: 'DELETE',
-        headers: { 'Accept': 'aplication/json' }
+        headers: { 'Accept': 'application/json' }
     });
     if (response.ok === true) {
         const user = await response.json();
@@ -133,7 +132,7 @@ function row(user) {
 document.getElementById('resetBtn').addEventListener('click', e => {
     e.preventDefault();
     reset();
-})
+});
 
 // отправка
 document.forms['userForm'].addEventListener('submit', e => {

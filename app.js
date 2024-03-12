@@ -1,79 +1,99 @@
 const express = require('express');
+const { Pool } = require('pg'); 
 
 const app = express();
 app.use(express.json());
 
 app.use(express.static('public'));
 
-// Типа база данных
-const users = [];
-let id = 1;
-
-//поиск по id
-function findUserIndexById(id){
-    for(let i=0; i < users.length; i++){
-        if(users[i].id==id) return i;
-    }
-    return -1;
-}
-app.get('/api/users', function(_, res){
-    res.send(users);
+// подключение к PostgreSQL
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'expressAPI',
+  password: 'root',
+  port: 5432,
 });
 
-app.get('/api/users/:id', function(req, res){
+app.get('/api/users', async function(_, res){
+    try {
+        const { rows } = await pool.query('SELECT * FROM person');
+        res.send(rows);
+    } catch (error) {
+        console.error('Error executing query', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+app.get('/api/users/:id', async function(req, res){
     const id = req.params.id;
-    const index = findUserIndexById(id);
-    if(index > -1){
-        res.send(users[index]);
-    }
-    else{
-        res.status(404).send('User not found');
+    try {
+        const { rows } = await pool.query('SELECT * FROM person WHERE id = $1', [id]);
+        if(rows.length > 0){
+            res.send(rows[0]);
+        } else {
+            res.status(404).send('User not found');
+        }
+    } catch (error) {
+        console.error('Error executing query', error);
+        res.status(500).send('Internal Server Error');
     }
 });
 
-app.post('/api/users', function(req, res) {
+app.post('/api/users', async function(req, res) {
     if(!req.body) return res.sendStatus(400);
     const userName = req.body.name;
     const userAge = req.body.age;
-    const user = {name: userName, age: userAge};
-    user.id = id++;
-    users.push(user);
-    res.send(user);
+
+    try {
+        const { rows } = await pool.query('INSERT INTO person(name, age) VALUES($1, $2) RETURNING *', [userName, userAge]);
+        const user = rows[0];
+        res.send(user);
+    } catch (error) {
+        console.error('Error executing query', error);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
-app.delete('/api/users/:id', function(req, res){
+app.delete('/api/users/:id', async function(req, res){
     const id = req.params.id;
-    const index = findUserIndexById(id);
-    if(index > -1){
-        const user = users.splice(index, 1)[0];
-        res.send(user);
-    }
-    else{
-        res.status(404).send('User not found');
+    try {
+        const { rows } = await pool.query('DELETE FROM person WHERE id = $1 RETURNING *', [id]);
+        if(rows.length > 0){
+            const user = rows[0];
+            res.send(user);
+        } else {
+            res.status(404).send('User not found');
+        }
+    } catch (error) {
+        console.error('Error executing query', error);
+        res.status(500).send('Internal Server Error');
     }
 });
-app.put('/api/users', function(req, res){
-    
+
+app.put('/api/users', async function(req, res){
     if(!req.body) return res.sendStatus(400);
 
     const id = req.body.id;
     const userName = req.body.name;
     const userAge = req.body.age;
 
-    const index = findUserIndexById(id);
-    if(index > -1){
-        const user = users[index];
-        user.age = userAge;
-        user.name = userName;
-        res.send(user);
-    }
-    else{
-        res.status(404).send('User not found');
+    try {
+        const { rows } = await pool.query('UPDATE person SET name = $1, age = $2 WHERE id = $3 RETURNING *', [userName, userAge, id]);
+        if(rows.length > 0){
+            const user = rows[0];
+            res.send(user);
+        } else {
+            res.status(404).send('User not found');
+        }
+    } catch (error) {
+        console.error('Error executing query', error);
+        res.status(500).send('Internal Server Error');
     }
 });
 
-const PORT = 3000
+const PORT = 3000;
 
 app.listen(PORT, function(){
-    console.log(`http://localhost:${PORT}`)
-})
+    console.log(`http://localhost:${PORT}`);
+});
